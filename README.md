@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# VELORA
 
-## Getting Started
+Marketing site and admin shell for VELORA, a premium furniture, upholstery,
+curtain, and shade solutions studio. This is a **scaffold**: the public site
+and admin UI are fully designed and functional against mock data, but there
+is no live database, authentication, file uploads, or working CRUD yet.
 
-First, run the development server:
+## Stack
+
+- Next.js (App Router) + TypeScript
+- Tailwind CSS v4 (design tokens in `app/globals.css`)
+- GSAP + ScrollTrigger for scroll reveals and the mobile menu transition
+- Prisma schema (`prisma/schema.prisma`) — not connected to a database yet
+- lucide-react icons
+
+## Getting started
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) for the public site, and
+[http://localhost:3000/admin/login](http://localhost:3000/admin/login) for
+the admin shell (the login form redirects without checking credentials).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `app/(site)/` — public marketing pages (home, about, services, projects,
+  gallery, contact), wrapped in `app/(site)/layout.tsx` (navbar + footer).
+- `app/admin/` — admin shell. `app/admin/login/` is standalone;
+  `app/admin/(dashboard)/` wraps the overview, services, projects, gallery,
+  and inquiries list views in the sidebar/header chrome.
+- `components/` — `ui/` (Button, Input, DataTable, Modal, Toast, …),
+  `layout/` (Navbar, Footer, MobileMenu), `sections/` (Hero, ServiceShowcase,
+  ContactForm, …), `animations/` (GSAP wrappers), `gallery/`, `projects/`,
+  `admin/`.
+- `lib/mock-data/` — typed mock content (services, projects, gallery,
+  quote requests, contact messages, site copy). Swap these reads for real
+  Prisma queries later without changing the shapes.
+- `lib/db/prisma.ts` — Prisma client singleton, not queried anywhere yet.
+- `prisma/schema.prisma` + `prisma.config.ts` — data model and CLI config
+  for when a real MySQL database is provisioned. Run
+  `npx prisma migrate dev --name init` once `DATABASE_URL` in `.env` points
+  at a real instance.
 
-## Learn More
+## Not wired up yet
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Real auth, database queries, file uploads, working CRUD in the admin,
+and SEO metadata are intentionally out of scope for this phase — see the
+component and page comments for where they'll plug in.

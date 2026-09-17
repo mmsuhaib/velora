@@ -1,0 +1,181 @@
+// VELORA data model.
+//
+// This schema describes the intended shape of the production database.
+// It is NOT connected to a live database in this phase — no migrations
+// have been run against it. `DATABASE_URL` in `.env` is a placeholder.
+// Once a real MySQL instance is provisioned, run:
+//   npx prisma migrate dev --name init
+// to create the schema, then swap `lib/mock-data/*` reads in the app
+// for `lib/db/prisma` queries against these same shapes.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Connection URL lives in `prisma.config.ts` (Prisma 7+ moved it out of
+// the schema file), not here.
+datasource db {
+  provider = "mysql"
+}
+
+enum Role {
+  ADMIN
+  EDITOR
+}
+
+enum QuoteStatus {
+  NEW
+  CONTACTED
+  CLOSED
+}
+
+enum MessageStatus {
+  UNREAD
+  READ
+  ARCHIVED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(EDITOR)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Category {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  slug     String    @unique
+  services Service[]
+  projects Project[]
+
+  @@map("categories")
+}
+
+model Service {
+  id                String        @id @default(cuid())
+  index             Int
+  slug              String        @unique
+  name              String
+  shortDescription  String        @db.VarChar(500)
+  description       String        @db.Text
+  highlights        String        @db.Text // JSON-encoded string[]
+  heroImage         String
+  thumbnailImage    String
+
+  categoryId        String
+  category          Category      @relation(fields: [categoryId], references: [id])
+
+  projects          Project[]
+  quoteRequests     QuoteRequest[]
+
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@map("services")
+}
+
+model Project {
+  id          String         @id @default(cuid())
+  slug        String         @unique
+  title       String
+  location    String
+  year        Int
+  summary     String         @db.VarChar(500)
+  description String         @db.Text
+  challenge   String         @db.Text
+  solution    String         @db.Text
+  heroImage   String
+  featured    Boolean        @default(false)
+
+  serviceId   String
+  service     Service        @relation(fields: [serviceId], references: [id])
+
+  categoryId  String
+  category    Category       @relation(fields: [categoryId], references: [id])
+
+  images      ProjectImage[]
+
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@map("projects")
+}
+
+model ProjectImage {
+  id        String   @id @default(cuid())
+  url       String
+  alt       String
+  order     Int      @default(0)
+
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@map("project_images")
+}
+
+model GalleryImage {
+  id        String   @id @default(cuid())
+  url       String
+  alt       String
+  category  String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@map("gallery_images")
+}
+
+model QuoteRequest {
+  id        String      @id @default(cuid())
+  name      String
+  email     String
+  phone     String
+  message   String       @db.Text
+  status    QuoteStatus  @default(NEW)
+
+  serviceId String?
+  service   Service?     @relation(fields: [serviceId], references: [id])
+
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@map("quote_requests")
+}
+
+model ContactMessage {
+  id        String        @id @default(cuid())
+  name      String
+  email     String
+  subject   String
+  message   String        @db.Text
+  status    MessageStatus @default(UNREAD)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@map("contact_messages")
+}
+
+model SiteSettings {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String   @db.Text // JSON-encoded value
+  updatedAt DateTime @updatedAt
+
+  @@map("site_settings")
+}
+
+model PageContent {
+  id        String   @id @default(cuid())
+  page      String   @unique // e.g. "home", "about", "contact"
+  content   String   @db.Text // JSON-encoded block content
+  updatedAt DateTime @updatedAt
+
+  @@map("page_content")
+}
